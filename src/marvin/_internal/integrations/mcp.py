@@ -79,10 +79,8 @@ async def _mcp_tool_wrapper(
 
     logger.debug(f"Calling MCP tool '{tool_name}' via {type(_mcp_server).__name__}")
     try:
-        result: CallToolResult = await _mcp_server.call_tool(
-            tool_name=tool_name, arguments=kwargs
-        )
-        result_content = result.content
+        result = await _mcp_server.call_tool(tool_name=tool_name, arguments=kwargs)
+        result_content = result.content if hasattr(result, "content") else result
 
         await _orchestrator.handle_event(
             ToolResultEvent(
@@ -142,9 +140,9 @@ async def discover_mcp_tools(
     if not discovery_tasks:
         return mcp_tools
 
-    tool_definition_results: list[
-        list[ToolDefinition] | BaseException
-    ] = await asyncio.gather(*discovery_tasks, return_exceptions=True)
+    tool_definition_results: list[list[ToolDefinition] | BaseException] = (
+        await asyncio.gather(*discovery_tasks, return_exceptions=True)
+    )
 
     for i, result in enumerate(tool_definition_results):
         server = server_map[i]
